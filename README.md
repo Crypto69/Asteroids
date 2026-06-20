@@ -18,6 +18,8 @@ You can also download this repository and run it locally using the Python instru
 
 Move the mouse anywhere on the screen to aim the ship. The ship points toward the mouse position.
 
+Before starting the game, you can test your mouse, head mouse, or facial tracking gestures. The panel at the top right of the screen shows the detected mouse activity and the game action that would be triggered by the current control mapping.
+
 Default controls:
 
 | Action | Default input |
