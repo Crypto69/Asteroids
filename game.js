@@ -894,8 +894,20 @@ function endGame() {
 function updateHud() {
   scoreEl.textContent = String(state.score).padStart(6, "0");
   waveEl.textContent = String(state.wave).padStart(2, "0");
-  livesEl.textContent = String(Math.max(0, state.lives));
+  renderLives();
   syncDiagnostics();
+}
+
+function renderLives() {
+  const lives = Math.max(0, state.lives);
+  livesEl.textContent = "";
+  livesEl.setAttribute("aria-label", `${lives} ${lives === 1 ? "life" : "lives"}`);
+  for (let i = 0; i < lives; i += 1) {
+    const icon = document.createElement("span");
+    icon.className = "life-ship";
+    icon.setAttribute("aria-hidden", "true");
+    livesEl.append(icon);
+  }
 }
 
 function hideStatus() {

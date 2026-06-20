@@ -233,14 +233,47 @@ canvas {
 }
 
 #score,
-#wave,
-#lives {
+#wave {
   display: block;
   min-height: 22px;
   color: #f6fbff;
   font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
   font-size: clamp(16px, 2.5vh, 21px);
   line-height: 1.1;
+}
+
+#lives {
+  display: flex;
+  min-height: 22px;
+  gap: 6px;
+  align-items: center;
+}
+
+.life-ship {
+  position: relative;
+  display: inline-block;
+  width: 16px;
+  height: 22px;
+  flex: 0 0 auto;
+}
+
+.life-ship::before {
+  position: absolute;
+  inset: 0;
+  content: "";
+  background: #f6fbff;
+  clip-path: polygon(50% 0, 92% 100%, 50% 72%, 8% 100%);
+}
+
+.life-ship::after {
+  position: absolute;
+  left: 6px;
+  top: 7px;
+  width: 4px;
+  height: 8px;
+  content: "";
+  background: #05070a;
+  transform: skewY(-12deg);
 }
 
 #status-panel {
