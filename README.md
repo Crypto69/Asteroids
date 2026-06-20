@@ -64,7 +64,7 @@ Hyperspace moves the ship to a random location and briefly makes it invulnerable
 
 ## Settings
 
-Open the settings panel with the gear button.
+Open the settings panel with the gear button which appears in the bottom right hand corner of the screen.
 
 ![Settings panel](docs/settings.png)
 
