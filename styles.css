@@ -196,6 +196,17 @@ canvas {
   font: 800 12px/1 "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
 }
 
+#starting-lives-input {
+  width: 100%;
+  min-height: 34px;
+  border: 1px solid rgba(233, 246, 255, 0.46);
+  border-radius: 6px;
+  background: rgba(5, 9, 13, 0.96);
+  color: #f8fcff;
+  font: 800 12px/1 "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+  padding: 0 8px;
+}
+
 .segmented-control {
   display: grid;
   grid-template-columns: repeat(3, 1fr);

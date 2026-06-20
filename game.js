@@ -16,6 +16,7 @@ const settingsPanel = document.querySelector("#settings-panel");
 const soundToggle = document.querySelector("#sound-toggle");
 const volumeSlider = document.querySelector("#volume-slider");
 const difficultyControl = document.querySelector("#difficulty-control");
+const startingLivesInput = document.querySelector("#starting-lives-input");
 const controlMappingSelects = document.querySelectorAll("[data-control-action]");
 const fireControlLabel = document.querySelector("#fire-control-label");
 const thrustControlLabel = document.querySelector("#thrust-control-label");
@@ -415,7 +416,7 @@ function startGame() {
   suppressClicksUntil = performance.now() + 320;
   clearEntities();
   state.score = 0;
-  state.lives = 3;
+  state.lives = settings.startingLives;
   state.wave = 1;
   state.playing = true;
   state.gameOver = false;
@@ -996,21 +997,29 @@ function loadSettings() {
     controls: { ...DEFAULT_CONTROL_MAPPINGS },
     difficulty: "normal",
     soundEnabled: true,
+    startingLives: 3,
     volume: 0.75,
   };
   try {
     const saved = JSON.parse(localStorage.getItem("asteroids-settings") || "{}");
     const difficulty = DIFFICULTY_SPEED[saved.difficulty] ? saved.difficulty : defaults.difficulty;
+    const startingLives = clampStartingLives(saved.startingLives, defaults.startingLives);
     const volume = Number.isFinite(saved.volume) ? Math.min(Math.max(saved.volume, 0), 1) : defaults.volume;
     return {
       controls: sanitizeControlMappings(saved.controls),
       difficulty,
       soundEnabled: typeof saved.soundEnabled === "boolean" ? saved.soundEnabled : defaults.soundEnabled,
+      startingLives,
       volume,
     };
   } catch {
     return defaults;
   }
+}
+
+function clampStartingLives(value, fallback = 3) {
+  const lives = Number(value);
+  return Number.isFinite(lives) ? Math.min(Math.max(Math.round(lives), 2), 5) : fallback;
 }
 
 function sanitizeControlMappings(savedControls = {}) {
@@ -1082,6 +1091,7 @@ function syncSettingsControls() {
   soundToggle.textContent = settings.soundEnabled ? "On" : "Off";
   soundToggle.setAttribute("aria-pressed", String(settings.soundEnabled));
   volumeSlider.value = String(Math.round(settings.volume * 100));
+  startingLivesInput.value = String(settings.startingLives);
   for (const button of difficultyControl.querySelectorAll("button")) {
     button.setAttribute("aria-pressed", String(button.dataset.difficulty === settings.difficulty));
   }
@@ -1093,8 +1103,19 @@ function syncSettingsControls() {
   hyperspaceControlLabel.textContent = controlGestureLabel(settings.controls.hyperspace);
   shell.dataset.difficulty = settings.difficulty;
   shell.dataset.soundEnabled = String(settings.soundEnabled);
+  shell.dataset.startingLives = String(settings.startingLives);
   shell.dataset.volume = settings.volume.toFixed(2);
   shell.dataset.controls = JSON.stringify(settings.controls);
+}
+
+function setStartingLives(value) {
+  settings.startingLives = clampStartingLives(value);
+  saveSettings();
+  syncSettingsControls();
+  if (!state.playing && !state.gameOver) {
+    state.lives = settings.startingLives;
+    updateHud();
+  }
 }
 
 function setControlMapping(action, gesture) {
@@ -1504,6 +1525,16 @@ volumeSlider.addEventListener("input", (event) => {
   setMasterVolume(Number(event.target.value) / 100);
 });
 
+startingLivesInput.addEventListener("input", (event) => {
+  event.stopPropagation();
+  setStartingLives(event.target.value);
+});
+
+startingLivesInput.addEventListener("change", (event) => {
+  event.stopPropagation();
+  setStartingLives(event.target.value);
+});
+
 difficultyControl.addEventListener("click", (event) => {
   const button = event.target.closest("button[data-difficulty]");
   if (!button) return;
@@ -1626,6 +1657,7 @@ window.__asteroidsDiagnostics = () => ({
     controls: { ...settings.controls },
     difficulty: settings.difficulty,
     soundEnabled: settings.soundEnabled,
+    startingLives: settings.startingLives,
     volume: Number(settings.volume.toFixed(2)),
   },
   ship: {
