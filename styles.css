@@ -313,8 +313,8 @@ canvas {
 }
 
 #intro-crawl {
-  width: min(920px, calc(100vw - 36px));
-  height: clamp(220px, 34vh, 360px);
+  width: min(1120px, calc(100vw - 28px));
+  height: clamp(260px, 42vh, 470px);
   overflow: hidden;
   perspective: 520px;
   pointer-events: none;
@@ -328,12 +328,12 @@ canvas {
 }
 
 #intro-crawl p {
-  margin: 0 0 14px;
+  margin: 0 0 16px;
   color: #f8fcff;
   font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
-  font-size: clamp(24px, 3.8vh, 36px);
+  font-size: clamp(32px, 5vh, 48px);
   font-weight: 800;
-  line-height: 1.35;
+  line-height: 1.26;
   text-align: center;
   text-transform: uppercase;
   text-shadow:
@@ -344,7 +344,7 @@ canvas {
 @keyframes intro-crawl-scroll {
   0% {
     opacity: 0;
-    transform: rotateX(26deg) translateY(330px) scale(1.08);
+    transform: rotateX(26deg) translateY(430px) scale(1.1);
   }
 
   10% {
@@ -357,7 +357,7 @@ canvas {
 
   100% {
     opacity: 0;
-    transform: rotateX(32deg) translateY(-900px) scale(0.9);
+    transform: rotateX(32deg) translateY(-1120px) scale(0.96);
   }
 }
 
