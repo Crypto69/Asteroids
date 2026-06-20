@@ -6,6 +6,16 @@ This version was designed with accessibility in mind for players who do not have
 
 The game keeps the classic wraparound playfield, triangular ship, drifting asteroids, splitting rocks, flying saucers, hyperspace, extra lives, and escalating waves, while adding mouse-only controls and an accessibility-focused settings panel.
 
+## Screenshots
+
+Start screen:
+
+![Start screen](docs/start.png)
+
+In-game:
+
+![In-game Asteroids gameplay](docs/ingame.png)
+
 ## Play Online
 
 Play the game in your browser:
@@ -19,6 +29,8 @@ You can also download this repository and run it locally using the Python instru
 Move the mouse anywhere on the screen to aim the ship. The ship points toward the mouse position.
 
 Before starting the game, you can test your mouse, head mouse, or facial tracking gestures. The panel at the top right of the screen shows the detected mouse activity and the game action that would be triggered by the current control mapping.
+
+![Detected mouse activity panel](docs/activity.png)
 
 Default controls:
 
@@ -53,6 +65,8 @@ Hyperspace moves the ship to a random location and briefly makes it invulnerable
 ## Settings
 
 Open the settings panel with the gear button.
+
+![Settings panel](docs/settings.png)
 
 Available settings:
 
