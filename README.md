@@ -2,7 +2,17 @@
 
 A browser-based Three.js recreation of the original **Asteroids** arcade game released by Atari in 1979.
 
+This version was designed with accessibility in mind for players who do not have the use of their hands, but can control a mouse pointer through assistive technology such as a gyroscopic head mouse, head tracking, or facial tracking. The game can be played with mouse movement and remappable mouse actions, so players can adapt Fire, Thrust, and Hyperspace to the gestures or switches that work best for them.
+
 The game keeps the classic wraparound playfield, triangular ship, drifting asteroids, splitting rocks, flying saucers, hyperspace, extra lives, and escalating waves, while adding mouse-only controls and an accessibility-focused settings panel.
+
+## Play Online
+
+Play the game in your browser:
+
+https://crypto69.github.io/Asteroids/
+
+You can also download this repository and run it locally using the Python instructions below.
 
 ## How To Play
 
@@ -79,4 +89,3 @@ Then open:
 ```text
 http://127.0.0.1:8173/
 ```
-
