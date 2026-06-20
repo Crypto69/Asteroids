@@ -297,6 +297,36 @@ canvas {
   display: none;
 }
 
+#game-shell[data-game-over="true"] #intro-crawl {
+  display: none;
+}
+
+#intro-crawl {
+  width: min(560px, calc(100vw - 36px));
+  height: clamp(78px, 16vh, 128px);
+  overflow: hidden;
+  perspective: 320px;
+  pointer-events: none;
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, #000 24%, #000 74%, transparent 100%);
+  mask-image: linear-gradient(to bottom, transparent 0%, #000 24%, #000 74%, transparent 100%);
+}
+
+#intro-crawl p {
+  margin: 0 0 10px;
+  color: #f8fcff;
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+  font-size: clamp(12px, 2vh, 17px);
+  font-weight: 800;
+  line-height: 1.35;
+  text-align: center;
+  text-transform: uppercase;
+  text-shadow:
+    0 0 12px rgba(255, 255, 255, 0.62),
+    0 12px 30px rgba(0, 0, 0, 0.72);
+  transform: rotateX(30deg) translateY(4px) scale(0.94);
+  transform-origin: 50% 100%;
+}
+
 #status-title {
   margin: 0;
   color: #f7fbff;
