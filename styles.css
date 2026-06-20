@@ -323,7 +323,7 @@ canvas {
 }
 
 #intro-crawl-text {
-  animation: intro-crawl-scroll 58s linear infinite;
+  animation: intro-crawl-scroll 53s linear infinite;
   transform-origin: 50% 100%;
 }
 
@@ -351,13 +351,13 @@ canvas {
     opacity: 1;
   }
 
-  84% {
+  97% {
     opacity: 1;
   }
 
   100% {
     opacity: 0;
-    transform: rotateX(32deg) translateY(-1120px) scale(0.96);
+    transform: rotateX(32deg) translateY(-1200px) scale(0.96);
   }
 }
 
