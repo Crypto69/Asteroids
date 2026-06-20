@@ -372,12 +372,14 @@ function seededNoise(seed, index) {
 function createStarfield() {
   stars.clear();
   const geometry = new THREE.BufferGeometry();
-  const count = 520;
+  const coverageRadius = Math.hypot(world.halfWidth, world.halfHeight);
+  const densityRatio = (coverageRadius * coverageRadius) / (world.halfWidth * world.halfHeight);
+  const count = Math.ceil(560 * densityRatio);
   const positions = new Float32Array(count * 3);
 
   for (let i = 0; i < count; i += 1) {
-    positions[i * 3] = random(-world.halfWidth, world.halfWidth);
-    positions[i * 3 + 1] = random(-world.halfHeight, world.halfHeight);
+    positions[i * 3] = random(-coverageRadius, coverageRadius);
+    positions[i * 3 + 1] = random(-coverageRadius, coverageRadius);
     positions[i * 3 + 2] = random(-280, -10);
   }
   geometry.setAttribute("position", new THREE.BufferAttribute(positions, 3));
