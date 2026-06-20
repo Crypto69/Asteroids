@@ -311,6 +311,11 @@ canvas {
   mask-image: linear-gradient(to bottom, transparent 0%, #000 24%, #000 74%, transparent 100%);
 }
 
+#intro-crawl-text {
+  animation: intro-crawl-scroll 18s linear infinite;
+  transform-origin: 50% 100%;
+}
+
 #intro-crawl p {
   margin: 0 0 10px;
   color: #f8fcff;
@@ -323,8 +328,26 @@ canvas {
   text-shadow:
     0 0 12px rgba(255, 255, 255, 0.62),
     0 12px 30px rgba(0, 0, 0, 0.72);
-  transform: rotateX(30deg) translateY(4px) scale(0.94);
-  transform-origin: 50% 100%;
+}
+
+@keyframes intro-crawl-scroll {
+  0% {
+    opacity: 0;
+    transform: rotateX(30deg) translateY(94px) scale(1);
+  }
+
+  14% {
+    opacity: 1;
+  }
+
+  76% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0;
+    transform: rotateX(34deg) translateY(-138px) scale(0.62);
+  }
 }
 
 #status-title {
