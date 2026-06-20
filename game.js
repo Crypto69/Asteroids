@@ -4,6 +4,7 @@ const shell = document.querySelector("#game-shell");
 const scoreEl = document.querySelector("#score");
 const waveEl = document.querySelector("#wave");
 const livesEl = document.querySelector("#lives");
+const highScoreEl = document.querySelector("#high-score");
 const mouseActivityEl = document.querySelector("#mouse-activity");
 const inputActionEl = document.querySelector("#input-action");
 const statusPanel = document.querySelector("#status-panel");
@@ -112,6 +113,7 @@ group.add(ship.mesh);
 
 const state = {
   score: 0,
+  highScore: loadHighScore(),
   lives: 3,
   wave: 1,
   asteroids: [],
@@ -851,6 +853,7 @@ function destroySaucer(index, award) {
 
 function awardScore(points) {
   state.score = Math.min(99990, state.score + points);
+  updateHighScore();
   while (state.score >= state.nextExtraLifeScore) {
     state.lives += 1;
     state.nextExtraLifeScore += 10000;
@@ -893,9 +896,33 @@ function endGame() {
 
 function updateHud() {
   scoreEl.textContent = String(state.score).padStart(6, "0");
+  highScoreEl.textContent = String(state.highScore).padStart(6, "0");
   waveEl.textContent = String(state.wave).padStart(2, "0");
   renderLives();
   syncDiagnostics();
+}
+
+function loadHighScore() {
+  try {
+    const savedScore = Number(localStorage.getItem("asteroids-high-score"));
+    return Number.isFinite(savedScore) ? Math.min(Math.max(Math.floor(savedScore), 0), 99990) : 0;
+  } catch {
+    return 0;
+  }
+}
+
+function saveHighScore() {
+  try {
+    localStorage.setItem("asteroids-high-score", String(state.highScore));
+  } catch {
+    // High score storage is a convenience and should never interrupt play.
+  }
+}
+
+function updateHighScore() {
+  if (state.score <= state.highScore) return;
+  state.highScore = state.score;
+  saveHighScore();
 }
 
 function renderLives() {
@@ -1577,6 +1604,7 @@ window.__asteroidsDiagnostics = () => ({
   bulletCount: state.bullets.length,
   saucerBulletCount: state.saucerBullets.length,
   gameOver: state.gameOver,
+  highScore: state.highScore,
   hyperspaceCooldown: Number(state.hyperspaceCooldown.toFixed(3)),
   lives: state.lives,
   playing: state.playing,

@@ -77,6 +77,10 @@ canvas {
   display: none;
 }
 
+#game-shell[data-playing="true"] .pregame-hud-block {
+  display: none;
+}
+
 #settings-scrim {
   position: absolute;
   z-index: 5;
@@ -233,7 +237,8 @@ canvas {
 }
 
 #score,
-#wave {
+#wave,
+#high-score {
   display: block;
   min-height: 22px;
   color: #f6fbff;
