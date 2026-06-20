@@ -104,6 +104,7 @@ const ship = {
   velocity: new THREE.Vector2(0, 0),
   radius: 13,
   angle: 0,
+  thrustAngle: null,
   invulnerable: 0,
   cooldown: 0,
   respawnTimer: 0,
@@ -421,6 +422,7 @@ function startGame() {
   state.nextExtraLifeScore = 10000;
   ship.position.set(0, 0);
   ship.velocity.set(0, 0);
+  ship.thrustAngle = null;
   ship.invulnerable = 2.2;
   ship.cooldown = 0;
   ship.respawnTimer = 0;
@@ -559,8 +561,7 @@ function shoot(command = "Left click: Fire") {
 
 function hyperspace(command = `${controlGestureLabel(settings.controls.hyperspace)}: Hyperspace`) {
   if (!state.playing || !ship.alive || state.hyperspaceCooldown > 0) return;
-  state.rightDown = false;
-  thrustPulseUntil = 0;
+  stopThrust();
   setLastCommand(command);
   state.hyperspaceCooldown = 1.6;
   burst(ship.position, 0x8edcff, 18, 180);
@@ -623,14 +624,15 @@ function update(dt) {
 }
 
 function updateShip(dt) {
-  tmpVector.set(pointer.x, pointer.y, 0);
-  ship.angle = Math.atan2(tmpVector.y - ship.position.y, tmpVector.x - ship.position.x);
+  const aimAngle = angleToPointer();
+  const thrusting = state.rightDown || performance.now() < thrustPulseUntil;
+  if (thrusting && ship.thrustAngle === null) ship.thrustAngle = aimAngle;
+  ship.angle = thrusting ? ship.thrustAngle : aimAngle;
   ship.mesh.rotation.z = ship.angle;
 
   const flame = ship.mesh.getObjectByName("flame");
-  const thrusting = state.rightDown || performance.now() < thrustPulseUntil;
   if (thrusting) {
-    const thrust = new THREE.Vector2(Math.cos(ship.angle), Math.sin(ship.angle)).multiplyScalar(360 * dt);
+    const thrust = new THREE.Vector2(Math.cos(ship.thrustAngle), Math.sin(ship.thrustAngle)).multiplyScalar(360 * dt);
     ship.velocity.add(thrust);
     flame.material.opacity = 0.94 + Math.sin(performance.now() * 0.04) * 0.06;
     flame.scale.y = random(1.0, 1.45);
@@ -640,11 +642,16 @@ function updateShip(dt) {
 
   const maxSpeed = 420;
   if (ship.velocity.length() > maxSpeed) ship.velocity.setLength(maxSpeed);
-  ship.velocity.multiplyScalar(Math.pow(0.985, dt * 60));
+  ship.velocity.multiplyScalar(Math.pow(0.994, dt * 60));
   ship.position.addScaledVector(ship.velocity, dt);
   wrapPosition(ship.position);
   ship.mesh.position.set(ship.position.x, ship.position.y, 8);
   ship.mesh.visible = ship.invulnerable <= 0 || Math.floor(performance.now() / 90) % 2 === 0;
+}
+
+function angleToPointer() {
+  tmpVector.set(pointer.x, pointer.y, 0);
+  return Math.atan2(tmpVector.y - ship.position.y, tmpVector.x - ship.position.x);
 }
 
 function updateRespawn(dt) {
@@ -661,6 +668,7 @@ function updateRespawn(dt) {
   }
   ship.position.copy(respawnPosition);
   ship.velocity.set(0, 0);
+  ship.thrustAngle = null;
   ship.invulnerable = 2.1;
   ship.alive = true;
   ship.mesh.visible = true;
@@ -1515,9 +1523,10 @@ function startThrust(command = `${controlGestureLabel(settings.controls.thrust)}
   if (state.rightDown && now - state.rightDownAt < 50) return;
   state.rightDown = true;
   state.rightDownAt = now;
+  if (ship.thrustAngle === null) ship.thrustAngle = angleToPointer();
   thrustPulseUntil = now + 260;
   if (ship.alive) {
-    const impulse = new THREE.Vector2(Math.cos(ship.angle), Math.sin(ship.angle)).multiplyScalar(70);
+    const impulse = new THREE.Vector2(Math.cos(ship.thrustAngle), Math.sin(ship.thrustAngle)).multiplyScalar(70);
     ship.velocity.add(impulse);
     const flame = ship.mesh.getObjectByName("flame");
     flame.material.opacity = 1;
@@ -1567,6 +1576,7 @@ function handleRightClick(event) {
 function stopThrust() {
   state.rightDown = false;
   thrustPulseUntil = 0;
+  ship.thrustAngle = null;
   audio.stopLoop("thrust");
   syncDiagnostics();
 }
@@ -1625,6 +1635,7 @@ window.__asteroidsDiagnostics = () => ({
       y: Number(ship.position.y.toFixed(2)),
     },
     speed: Number(ship.velocity.length().toFixed(2)),
+    thrustAngle: ship.thrustAngle === null ? null : Number(ship.thrustAngle.toFixed(3)),
   },
   wave: state.wave,
 });
