@@ -320,7 +320,7 @@ canvas {
   margin: 0 0 10px;
   color: #f8fcff;
   font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
-  font-size: clamp(12px, 2vh, 17px);
+  font-size: clamp(14px, 2.3vh, 20px);
   font-weight: 800;
   line-height: 1.35;
   text-align: center;
