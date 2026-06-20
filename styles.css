@@ -313,25 +313,25 @@ canvas {
 }
 
 #intro-crawl {
-  width: min(1120px, calc(100vw - 28px));
-  height: clamp(260px, 42vh, 470px);
+  width: min(900px, calc(100vw - 28px));
+  height: clamp(118px, 20vh, 172px);
   overflow: hidden;
-  perspective: 520px;
+  perspective: 430px;
   pointer-events: none;
   -webkit-mask-image: linear-gradient(to bottom, transparent 0%, #000 12%, #000 88%, transparent 100%);
   mask-image: linear-gradient(to bottom, transparent 0%, #000 12%, #000 88%, transparent 100%);
 }
 
 #intro-crawl-text {
-  animation: intro-crawl-scroll 53s linear infinite;
+  animation: intro-crawl-scroll 48s linear infinite;
   transform-origin: 50% 100%;
 }
 
 #intro-crawl p {
-  margin: 0 0 16px;
+  margin: 0 0 13px;
   color: #f8fcff;
   font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
-  font-size: clamp(32px, 5vh, 48px);
+  font-size: clamp(30px, 4.8vh, 46px);
   font-weight: 800;
   line-height: 1.26;
   text-align: center;
@@ -344,7 +344,7 @@ canvas {
 @keyframes intro-crawl-scroll {
   0% {
     opacity: 0;
-    transform: rotateX(26deg) translateY(430px) scale(1.1);
+    transform: rotateX(28deg) translateY(230px) scale(1.08);
   }
 
   10% {
@@ -357,7 +357,7 @@ canvas {
 
   100% {
     opacity: 0;
-    transform: rotateX(32deg) translateY(-1200px) scale(0.96);
+    transform: rotateX(33deg) translateY(-1080px) scale(0.92);
   }
 }
 
