@@ -1,2 +1,9 @@
 .DS_Store
 
+# Playwright CLI skill artifacts (screenshots, snapshots, console logs)
+.playwright-cli/
+
+# Claude Code local config / skills folder and instructions
+.claude/
+CLAUDE.md
+
