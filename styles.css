@@ -323,8 +323,11 @@ canvas {
 }
 
 #intro-crawl-text {
-  animation: intro-crawl-scroll 24s linear infinite;
-  transform-origin: 50% 100%;
+  animation: intro-crawl-scroll 64s linear infinite;
+  /* Pinned to the original 3-paragraph block's bottom (141px) so adding
+     instruction lines below does not move the perspective pivot and shrink
+     the opening text. Do not change without re-measuring the opening block. */
+  transform-origin: 50% 141px;
 }
 
 #intro-crawl p {
@@ -347,17 +350,17 @@ canvas {
     transform: rotateX(28deg) translateY(226px) scale(1.04);
   }
 
-  10% {
+  3% {
     opacity: 1;
   }
 
-  84% {
+  97% {
     opacity: 1;
   }
 
   100% {
     opacity: 0;
-    transform: rotateX(34deg) translateY(-190px) scale(0.68);
+    transform: rotateX(34deg) translateY(-880px) scale(0.68);
   }
 }
 
