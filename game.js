@@ -10,6 +10,7 @@ const inputActionEl = document.querySelector("#input-action");
 const statusPanel = document.querySelector("#status-panel");
 const statusTitle = document.querySelector("#status-title");
 const restartButton = document.querySelector("#restart-button");
+const coinInsert = document.querySelector("#coin-insert");
 const settingsButton = document.querySelector("#settings-button");
 const settingsScrim = document.querySelector("#settings-scrim");
 const settingsPanel = document.querySelector("#settings-panel");
@@ -190,6 +191,7 @@ class AudioManager {
       bangLarge: "./assets/audio/bangLarge.wav",
       bangMedium: "./assets/audio/bangMedium.wav",
       bangSmall: "./assets/audio/bangSmall.wav",
+      coin: "./assets/audio/coin.wav",
       beat1: "./assets/audio/beat1.wav",
       beat2: "./assets/audio/beat2.wav",
       extraShip: "./assets/audio/extraShip.wav",
@@ -1677,12 +1679,45 @@ function stopThrust() {
   syncDiagnostics();
 }
 
+let coinInserting = false;
+
+function playCoinInsert(onDone) {
+  if (coinInserting) return;
+  audio.unlock();
+  audio.play("coin", { volume: 0.85 });
+  const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if (reduceMotion || !coinInsert) {
+    onDone();
+    return;
+  }
+  coinInserting = true;
+  const credit = coinInsert.querySelector(".coin-credit");
+  let finished = false;
+  const finish = () => {
+    if (finished) return;
+    finished = true;
+    clearTimeout(fallback);
+    credit.removeEventListener("animationend", finish);
+    coinInsert.classList.remove("is-playing");
+    coinInsert.hidden = true;
+    coinInserting = false;
+    onDone();
+  };
+  // Restart the animation from a clean state.
+  coinInsert.classList.remove("is-playing");
+  coinInsert.hidden = false;
+  void coinInsert.offsetWidth; // force reflow so the animation replays
+  coinInsert.classList.add("is-playing");
+  credit.addEventListener("animationend", finish);
+  const fallback = setTimeout(finish, 2300);
+}
+
 restartButton.addEventListener("pointerdown", (event) => {
   event.preventDefault();
   event.stopPropagation();
   ignoreNextGameplayClick = true;
   setLastCommand("Start");
-  startGame();
+  playCoinInsert(startGame);
 });
 
 restartButton.addEventListener("click", (event) => {

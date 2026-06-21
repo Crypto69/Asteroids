@@ -426,6 +426,154 @@ canvas {
   outline: none;
 }
 
+#coin-insert {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  display: grid;
+  place-items: center;
+  background: rgba(1, 4, 7, 0.55);
+  pointer-events: none;
+}
+
+#coin-insert[hidden] {
+  display: none;
+}
+
+.coin-machine {
+  position: relative;
+  width: 220px;
+  height: 260px;
+}
+
+/* Faceplate sits in front of the coin so the coin disappears "into" the slot. */
+.coin-plate {
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  transform: translateX(-50%);
+  z-index: 2;
+  width: 200px;
+  padding: 26px 0 18px;
+  border: 1px solid rgba(20, 28, 36, 0.9);
+  border-radius: 10px;
+  background:
+    linear-gradient(160deg, #cdd6df 0%, #8c97a3 22%, #b6c0ca 48%, #6f7a86 78%, #aab4be 100%);
+  box-shadow:
+    inset 0 2px 3px rgba(255, 255, 255, 0.65),
+    inset 0 -3px 6px rgba(0, 0, 0, 0.45),
+    0 14px 40px rgba(0, 0, 0, 0.55);
+  display: grid;
+  justify-items: center;
+  gap: 14px;
+}
+
+.coin-slot {
+  width: 96px;
+  height: 16px;
+  border-radius: 9px;
+  background: radial-gradient(ellipse at center, #1c2329 0%, #05080b 70%);
+  box-shadow:
+    inset 0 3px 5px rgba(0, 0, 0, 0.95),
+    inset 0 -1px 1px rgba(255, 255, 255, 0.18),
+    0 0 12px rgba(118, 211, 255, 0.35);
+}
+
+.coin-label {
+  color: #11181f;
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.5);
+}
+
+.coin {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  z-index: 1;
+  width: 74px;
+  height: 74px;
+  margin-left: -37px;
+  border-radius: 50%;
+  background-color: #c8cdd2;
+  background-image: url("./assets/20cents.jpg");
+  background-size: 122%;
+  background-position: center;
+  background-repeat: no-repeat;
+  /* Milled rim + relief shading over the platypus photo. */
+  box-shadow:
+    inset 0 0 0 2px rgba(150, 158, 166, 0.85),
+    inset 0 2px 5px rgba(255, 255, 255, 0.55),
+    inset 0 -3px 7px rgba(58, 64, 70, 0.5),
+    0 6px 14px rgba(0, 0, 0, 0.5);
+  opacity: 0;
+}
+
+.coin-credit {
+  position: absolute;
+  left: 50%;
+  top: -34px;
+  transform: translateX(-50%);
+  z-index: 3;
+  color: #bdeeff;
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  text-shadow: 0 0 12px rgba(118, 211, 255, 0.7);
+  opacity: 0;
+}
+
+/* Slot opening, centered horizontally, sits ~204px down from the machine top. */
+#coin-insert.is-playing .coin {
+  animation: coin-drop 1s ease-in forwards;
+}
+
+#coin-insert.is-playing .coin-credit {
+  animation: credit-flash 0.55s steps(2, jump-none) 1s 2 forwards;
+}
+
+@keyframes coin-drop {
+  0% {
+    opacity: 0;
+    transform: translateY(-10px) rotateX(0deg) scaleY(1);
+  }
+  12% {
+    opacity: 1;
+  }
+  72% {
+    opacity: 1;
+    transform: translateY(196px) rotateX(0deg) scaleY(1);
+  }
+  /* Reaches the slot line: tilt edge-on and slip behind the faceplate. */
+  100% {
+    opacity: 1;
+    transform: translateY(210px) rotateX(82deg) scaleY(0.25);
+  }
+}
+
+@keyframes credit-flash {
+  0% {
+    opacity: 0;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #coin-insert {
+    display: none !important;
+  }
+}
+
 @media (max-width: 520px) {
   #hud {
     grid-template-columns: repeat(3, minmax(0, 1fr));

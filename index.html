@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Asteroids</title>
-    <link rel="stylesheet" href="./styles.css?v=20260621a" />
+    <link rel="stylesheet" href="./styles.css?v=20260621e" />
   </head>
   <body>
     <main id="game-shell" aria-label="Asteroids game">
@@ -121,8 +121,19 @@
         </div>
         <button id="restart-button" type="button">START</button>
       </div>
+
+      <div id="coin-insert" hidden aria-hidden="true">
+        <div class="coin-machine">
+          <div class="coin"></div>
+          <div class="coin-plate">
+            <div class="coin-slot"></div>
+            <span class="coin-label">INSERT COIN</span>
+          </div>
+          <div class="coin-credit">CREDIT 01</div>
+        </div>
+      </div>
     </main>
 
-    <script type="module" src="./game.js?v=20260621a"></script>
+    <script type="module" src="./game.js?v=20260621b"></script>
   </body>
 </html>
