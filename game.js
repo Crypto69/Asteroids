@@ -43,7 +43,45 @@ const world = {
 
 const pointer = new THREE.Vector2(0, 0);
 const tmpVector = new THREE.Vector3();
+const tmpVec2 = new THREE.Vector2();
 const clock = new THREE.Clock();
+const DEBUG =
+  typeof window !== "undefined" &&
+  (window.__asteroidsDebug === true || new URLSearchParams(window.location.search).has("debug"));
+
+// Shared geometry/material reused by every bullet and particle so spawning never
+// allocates (or leaks) GPU buffers. Bullets are visually identical, so a single
+// geometry+material is shared outright. Particles share one unit-circle geometry
+// and are recycled through a free list (particleByteMaterial varies opacity/color
+// per instance, so each pooled particle keeps its own material).
+const BULLET_GEO = new THREE.SphereGeometry(3.8, 12, 8);
+const BULLET_MAT = new THREE.MeshBasicMaterial({ color: 0xe9fdff });
+const SAUCER_BULLET_GEO = new THREE.SphereGeometry(3.6, 10, 8);
+const SAUCER_BULLET_MAT = new THREE.MeshBasicMaterial({ color: 0xffffff });
+const PARTICLE_GEO = new THREE.CircleGeometry(1, 8);
+const particlePool = [];
+// Resources shared across many meshes must never be disposed when a single mesh
+// is removed; disposeObject3D() skips anything in this set.
+const SHARED_RESOURCES = new Set([
+  BULLET_GEO,
+  BULLET_MAT,
+  SAUCER_BULLET_GEO,
+  SAUCER_BULLET_MAT,
+  PARTICLE_GEO,
+]);
+
+function disposeObject3D(root) {
+  root.traverse((obj) => {
+    if (!obj.isMesh && !obj.isPoints) return;
+    if (obj.geometry && !SHARED_RESOURCES.has(obj.geometry)) obj.geometry.dispose();
+    const material = obj.material;
+    if (Array.isArray(material)) {
+      for (const mat of material) if (!SHARED_RESOURCES.has(mat)) mat.dispose();
+    } else if (material && !SHARED_RESOURCES.has(material)) {
+      material.dispose();
+    }
+  });
+}
 const HOLD_MS = 350;
 const SETTINGS_CLOSE_SUPPRESS_MS = 850;
 const MAX_PLAYER_BULLETS = 4;
@@ -111,6 +149,7 @@ const ship = {
   respawnTimer: 0,
   alive: true,
 };
+ship.flame = ship.mesh.getObjectByName("flame");
 group.add(ship.mesh);
 
 const state = {
@@ -371,6 +410,7 @@ function seededNoise(seed, index) {
 }
 
 function createStarfield() {
+  for (const child of stars.children) disposeObject3D(child);
   stars.clear();
   const geometry = new THREE.BufferGeometry();
   const coverageRadius = Math.hypot(world.halfWidth, world.halfHeight);
@@ -439,11 +479,17 @@ function startGame() {
 
 function clearEntities() {
   audio.stopAllLoops();
-  for (const asteroid of state.asteroids) asteroidGroup.remove(asteroid.mesh);
-  for (const saucer of state.saucers) saucerGroup.remove(saucer.mesh);
+  for (const asteroid of state.asteroids) {
+    asteroidGroup.remove(asteroid.mesh);
+    disposeObject3D(asteroid.mesh);
+  }
+  for (const saucer of state.saucers) {
+    saucerGroup.remove(saucer.mesh);
+    disposeObject3D(saucer.mesh);
+  }
   for (const bullet of state.bullets) bulletGroup.remove(bullet.mesh);
   for (const bullet of state.saucerBullets) saucerBulletGroup.remove(bullet.mesh);
-  for (const particle of state.particles) effectGroup.remove(particle.mesh);
+  for (const particle of state.particles) releaseParticle(particle);
   state.asteroids = [];
   state.saucers = [];
   state.bullets = [];
@@ -529,10 +575,7 @@ function fireSaucerShot(saucer) {
     velocity: new THREE.Vector2(Math.cos(angle) * speed, Math.sin(angle) * speed),
     age: 0,
     radius: 4,
-    mesh: new THREE.Mesh(
-      new THREE.SphereGeometry(3.6, 10, 8),
-      new THREE.MeshBasicMaterial({ color: 0xffffff })
-    ),
+    mesh: new THREE.Mesh(SAUCER_BULLET_GEO, SAUCER_BULLET_MAT),
   };
   bullet.mesh.position.set(bullet.position.x, bullet.position.y, 10);
   state.saucerBullets.push(bullet);
@@ -551,10 +594,7 @@ function shoot(command = "Left click: Fire") {
     velocity: direction.multiplyScalar(610).add(ship.velocity.clone()),
     age: 0,
     radius: 4,
-    mesh: new THREE.Mesh(
-      new THREE.SphereGeometry(3.8, 12, 8),
-      new THREE.MeshBasicMaterial({ color: 0xe9fdff })
-    ),
+    mesh: new THREE.Mesh(BULLET_GEO, BULLET_MAT),
   };
   bullet.mesh.position.set(bullet.position.x, bullet.position.y, 6);
   state.bullets.push(bullet);
@@ -578,20 +618,39 @@ function hyperspace(command = `${controlGestureLabel(settings.controls.hyperspac
 function burst(position, color, amount, speed) {
   for (let i = 0; i < amount; i += 1) {
     const angle = random(0, Math.PI * 2);
-    const particle = {
-      position: position.clone(),
-      velocity: new THREE.Vector2(Math.cos(angle), Math.sin(angle)).multiplyScalar(random(speed * 0.35, speed)),
-      age: 0,
-      life: random(0.35, 0.8),
-      mesh: new THREE.Mesh(
-        new THREE.CircleGeometry(random(1.4, 3.2), 8),
-        new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 1 })
-      ),
-    };
+    const radius = random(1.4, 3.2);
+    const particle = acquireParticle();
+    particle.position.set(position.x, position.y);
+    particle.velocity.set(Math.cos(angle), Math.sin(angle)).multiplyScalar(random(speed * 0.35, speed));
+    particle.age = 0;
+    particle.life = random(0.35, 0.8);
     particle.mesh.position.set(position.x, position.y, 16);
+    particle.mesh.scale.setScalar(radius);
+    particle.mesh.material.color.set(color);
+    particle.mesh.material.opacity = 1;
     state.particles.push(particle);
     effectGroup.add(particle.mesh);
   }
+}
+
+function acquireParticle() {
+  const pooled = particlePool.pop();
+  if (pooled) return pooled;
+  return {
+    position: new THREE.Vector2(),
+    velocity: new THREE.Vector2(),
+    age: 0,
+    life: 0,
+    mesh: new THREE.Mesh(
+      PARTICLE_GEO,
+      new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 1 })
+    ),
+  };
+}
+
+function releaseParticle(particle) {
+  effectGroup.remove(particle.mesh);
+  particlePool.push(particle);
 }
 
 function update(dt) {
@@ -633,10 +692,9 @@ function updateShip(dt) {
   ship.angle = thrusting ? ship.thrustAngle : aimAngle;
   ship.mesh.rotation.z = ship.angle;
 
-  const flame = ship.mesh.getObjectByName("flame");
+  const flame = ship.flame;
   if (thrusting) {
-    const thrust = new THREE.Vector2(Math.cos(ship.thrustAngle), Math.sin(ship.thrustAngle)).multiplyScalar(360 * dt);
-    ship.velocity.add(thrust);
+    ship.velocity.add(tmpVec2.set(Math.cos(ship.thrustAngle), Math.sin(ship.thrustAngle)).multiplyScalar(360 * dt));
     flame.material.opacity = 0.94 + Math.sin(performance.now() * 0.04) * 0.06;
     flame.scale.y = random(1.0, 1.45);
   } else {
@@ -718,6 +776,7 @@ function updateSaucers(dt) {
       (saucer.side > 0 && saucer.position.x < -world.halfWidth - saucer.radius)
     ) {
       saucerGroup.remove(saucer.mesh);
+      disposeObject3D(saucer.mesh);
       state.saucers.splice(i, 1);
       if (state.saucers.length === 0) audio.stopLoop("saucer");
     }
@@ -761,7 +820,7 @@ function updateParticles(dt) {
     particle.mesh.position.set(particle.position.x, particle.position.y, 16);
     particle.mesh.material.opacity = Math.max(0, 1 - particle.age / particle.life);
     if (particle.age > particle.life) {
-      effectGroup.remove(particle.mesh);
+      releaseParticle(particle);
       state.particles.splice(i, 1);
     }
   }
@@ -839,6 +898,7 @@ function destroyAsteroid(index, award = true) {
   const asteroid = state.asteroids[index];
   if (!asteroid) return;
   asteroidGroup.remove(asteroid.mesh);
+  disposeObject3D(asteroid.mesh);
   state.asteroids.splice(index, 1);
   playAsteroidBang(asteroid.size);
   if (award) awardScore(asteroid.size === 3 ? 20 : asteroid.size === 2 ? 50 : 100);
@@ -855,6 +915,7 @@ function destroySaucer(index, award) {
   const saucer = state.saucers[index];
   if (!saucer) return;
   saucerGroup.remove(saucer.mesh);
+  disposeObject3D(saucer.mesh);
   state.saucers.splice(index, 1);
   if (state.saucers.length === 0) audio.stopLoop("saucer");
   if (award) awardScore(saucer.type === "small" ? 1000 : 200);
@@ -1378,6 +1439,12 @@ function isTrackedMouseButton(button) {
 }
 
 function syncDiagnostics() {
+  // data-playing / data-game-over drive CSS, so they are always kept current.
+  shell.dataset.playing = String(state.playing);
+  shell.dataset.gameOver = String(state.gameOver);
+  // The remaining attributes exist only for test introspection; skip the work in
+  // normal play. Enable with ?debug=1 or window.__asteroidsDebug.
+  if (!DEBUG) return;
   const firstAsteroid = state.asteroids[0];
   shell.dataset.asteroids = String(state.asteroids.length);
   shell.dataset.saucers = String(state.saucers.length);
@@ -1387,10 +1454,8 @@ function syncDiagnostics() {
   shell.dataset.firstAsteroidX = firstAsteroid ? firstAsteroid.position.x.toFixed(2) : "0.00";
   shell.dataset.firstAsteroidY = firstAsteroid ? firstAsteroid.position.y.toFixed(2) : "0.00";
   shell.dataset.frame = String(state.frame);
-  shell.dataset.gameOver = String(state.gameOver);
   shell.dataset.hyperspaceCooldown = state.hyperspaceCooldown.toFixed(3);
   shell.dataset.inputAction = inputActionEl.textContent;
-  shell.dataset.playing = String(state.playing);
   shell.dataset.rightDown = String(state.rightDown);
   shell.dataset.shipAngle = ship.angle.toFixed(3);
   shell.dataset.soundEnabled = String(settings.soundEnabled);
@@ -1559,11 +1624,9 @@ function startThrust(command = `${controlGestureLabel(settings.controls.thrust)}
   if (ship.thrustAngle === null) ship.thrustAngle = angleToPointer();
   thrustPulseUntil = now + 260;
   if (ship.alive) {
-    const impulse = new THREE.Vector2(Math.cos(ship.thrustAngle), Math.sin(ship.thrustAngle)).multiplyScalar(70);
-    ship.velocity.add(impulse);
-    const flame = ship.mesh.getObjectByName("flame");
-    flame.material.opacity = 1;
-    flame.scale.y = 1.45;
+    ship.velocity.add(tmpVec2.set(Math.cos(ship.thrustAngle), Math.sin(ship.thrustAngle)).multiplyScalar(70));
+    ship.flame.material.opacity = 1;
+    ship.flame.scale.y = 1.45;
   }
   audio.startLoop("thrust", "thrust", { volume: 0.6 });
   setLastCommand(command);
